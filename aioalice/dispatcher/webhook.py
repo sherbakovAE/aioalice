@@ -2,6 +2,9 @@ import asyncio
 import logging
 import functools
 from aiohttp import web
+import aiohttp_cors
+from aiohttp_cors import custom_cors, CorsViewMixin
+
 from ..utils import json, generate_json_payload
 from ..types import AliceRequest, AliceResponse, Response
 
@@ -22,8 +25,15 @@ DEFAULT_ERROR_RESPONSE_TEXT = 'Server error. Developer has to check logs.'
 # but Yandex starts countdown as user asks a question, request processing takes some time
 RESPONSE_TIMEOUT = 1.2
 
+DEFAULT_CORS = {
+    "*": aiohttp_cors.ResourceOptions(
+        allow_credentials=True,
+        expose_headers="*",
+        allow_headers="*",
+    )}
 
-class WebhookRequestHandler(web.View):
+
+class WebhookRequestHandler(web.View, CorsViewMixin):
     """
     Simple Wehhook request handler for aiohttp web server.
 
@@ -174,7 +184,9 @@ class WebhookRequestHandler(web.View):
 
 
 def configure_app(app, dispatcher, path=DEFAULT_WEB_PATH,
-                  default_response_or_text=DEFAULT_ERROR_RESPONSE_TEXT):
+                  default_response_or_text=DEFAULT_ERROR_RESPONSE_TEXT,
+                  cors=None,
+                  ):
     """
     You can prepare web.Application for working with webhook handler.
 
@@ -182,10 +194,16 @@ def configure_app(app, dispatcher, path=DEFAULT_WEB_PATH,
     :param dispatcher: Dispatcher instance
     :param path: Path to your webhook.
     :default_response_or_text: `aioalice.types.Response` OR text to answer user on fail or timeout
+    default_cors: CORS setting
     :return:
     """
+
+    if cors is None:
+        cors = DEFAULT_CORS
+
+    cors = aiohttp_cors.setup(app, defaults=cors)
     app.on_shutdown.append(dispatcher.shutdown)
-    app.router.add_route('*', path, WebhookRequestHandler, name='alice_webhook_handler')
+    cors.add(app.router.add_route('*', path, WebhookRequestHandler, name='alice_webhook_handler'))
     app[ALICE_DISPATCHER_KEY] = dispatcher
     # Prepare default Response
     if isinstance(default_response_or_text, Response):
