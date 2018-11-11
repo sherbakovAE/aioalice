@@ -8,9 +8,7 @@ from aiohttp_cors import custom_cors, CorsViewMixin
 from ..utils import json, generate_json_payload
 from ..types import AliceRequest, AliceResponse, Response
 
-
 log = logging.getLogger(__name__)
-
 
 DEFAULT_WEB_PATH = '/alicewh/'
 ALICE_DISPATCHER_KEY = 'ALICE_DISPATCHER'
@@ -193,8 +191,8 @@ def configure_app(app, dispatcher, path=DEFAULT_WEB_PATH,
     :param app: :class:`aiohttp.web.Application`
     :param dispatcher: Dispatcher instance
     :param path: Path to your webhook.
-    :default_response_or_text: `aioalice.types.Response` OR text to answer user on fail or timeout
-    default_cors: CORS setting
+    :param default_response_or_text: `aioalice.types.Response` OR text to answer user on fail or timeout
+    :param cors: CORS setting
     :return:
     """
 
@@ -219,15 +217,19 @@ def configure_app(app, dispatcher, path=DEFAULT_WEB_PATH,
 
 
 def get_new_configured_app(dispatcher, path=DEFAULT_WEB_PATH,
-                           default_response_or_text=DEFAULT_ERROR_RESPONSE_TEXT):
+                           default_response_or_text=DEFAULT_ERROR_RESPONSE_TEXT, cors=None):
     """
     Create new :class:`aiohttp.web.Application` and configure it.
 
     :param dispatcher: Dispatcher instance
     :param path: Path to your webhook.
-    :default_response_or_text: `aioalice.types.Response` OR text to answer user on fail or timeout
+    :param default_response_or_text: `aioalice.types.Response` OR text to answer user on fail or timeout
+    :param cors: CORS setting
     :return:
     """
+
+    if cors is None:
+        cors = DEFAULT_CORS
     app = web.Application()
-    configure_app(app, dispatcher, path, default_response_or_text)
+    configure_app(app, dispatcher, path, default_response_or_text, cors=cors)
     return app
