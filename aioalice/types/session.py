@@ -14,7 +14,8 @@ class BaseSession(AliceObject):
 class Session(BaseSession):
     """Session object"""
     new = attrib(type=bool)
-    skill_id = attrib(type=str)
+    # for test with https://github.com/popstas/yandex-dialogs-client
+    skill_id = attrib(type=str, init=False)
 
     @property
     def base(self):
