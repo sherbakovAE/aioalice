@@ -4,7 +4,7 @@ import asyncio
 
 from . import api
 from .handler import Handler, SkipHandler
-from .storage import DisabledStorage, MemoryStorage, DEFAULT_STATE
+from .storage import DisabledStorage, MemoryStorage, UnQliteStorage, DEFAULT_STATE
 from .filters import generate_default_filters, ExceptionsFilter
 from ..utils import json, exceptions
 
@@ -14,7 +14,7 @@ from ..types import UploadedImage, Quota
 
 class Dispatcher:
 
-    def __init__(self, loop=None, storage=None, *, skill_id=None, oauth_token=None):
+    def __init__(self, loop=None, storage=None, *, skill_id=None, oauth_token=None, path=None, name=None):
         # TODO: inculde default handler for 'test' commands
         # TODO: create default handler for exceptions handler
         self.loop = loop or asyncio.get_event_loop()
@@ -26,6 +26,9 @@ class Dispatcher:
         self.oauth_token = oauth_token
 
         self.__session = None  # Lazy initialize session
+
+        self.path = path
+        self.name = name
 
     @property
     def session(self):

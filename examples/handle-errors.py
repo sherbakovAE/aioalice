@@ -3,17 +3,15 @@ import logging
 from aiohttp import web
 from aioalice import Dispatcher, get_new_configured_app
 
-
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.INFO)
-
 
 WEBHOOK_URL_PATH = '/my-alice-webhook/'  # webhook endpoint
 
 WEBAPP_HOST = 'localhost'
 WEBAPP_PORT = 3001
 
-dp = Dispatcher()
+dp = Dispatcher(path=WEBHOOK_URL_PATH, name="handle_errors")
 
 
 @dp.request_handler()
@@ -32,5 +30,5 @@ async def the_only_errors_handler(alice_request, e):
 
 
 if __name__ == '__main__':
-    app = get_new_configured_app(dispatcher=dp, path=WEBHOOK_URL_PATH)
+    app = get_new_configured_app(dispatchers=dp)
     web.run_app(app, host=WEBAPP_HOST, port=WEBAPP_PORT)

@@ -1,4 +1,7 @@
 import logging
+from unqlite import UnQLite
+from ..utils import json
+from typing import Union
 
 # This state will be default instead of `None` to gain maximum speed
 # So if handler is registered with `state=None`,
@@ -188,3 +191,79 @@ class MemoryStorage(BaseStorage):
         if data is None:
             data = {}
         user['data'].update(data, **kwargs)
+
+
+class UnQliteStorage(BaseStorage):
+    """
+    Unqlite states storage
+    in-memory or file
+    """
+
+    def __init__(self, filename=None):
+        if filename:
+            self.data = UnQLite(filename)
+        else:
+            self.data = UnQLite()
+
+    @staticmethod
+    def repair_from_store(d: Union[dict, bytes]) -> dict:
+        if isinstance(d, bytes):
+            try:
+                return json.loads(d.decode().replace("'", "\""))
+            except json.decoder.JSONDecodeError as e:
+                log.error(e)
+
+        # for k, v in d.items():
+        #     if isinstance(v, collections.Mapping):
+        #         d[k] = UnQliteStorage.dict_byte_to_str(d.get(k, {}))
+        #     else:
+        #         if isinstance(v, bytes):
+        #             d[k] = v.decode()
+        # return d
+
+    async def close(self):
+        self.data.close()
+
+    async def wait_closed(self):
+        pass
+
+    def _get_user_data(self, user_id: str):
+        _DEFAULT_DATA = {'state': DEFAULT_STATE, 'data': {}}
+
+        if not self.data.exists(user_id):
+            self.data.append(user_id, _DEFAULT_DATA)
+            return _DEFAULT_DATA
+        else:
+            return UnQliteStorage.repair_from_store(self.data[user_id])
+
+    async def get_state(self, user_id):
+        user = self._get_user_data(user_id)
+        if user['state']:
+            return user['state']
+        else:
+            return DEFAULT_STATE
+
+    async def get_data(self, user_id):
+        user = self._get_user_data(user_id)
+        if user['data']:
+            return user['data']
+        else:
+            return {}
+
+    async def set_state(self, user_id: str, state: str):
+        user_data = self._get_user_data(user_id)
+        user_data['state'] = state
+        return self.data.update({user_id: user_data})
+
+    async def set_data(self, user_id: str, data: dict):
+        user_data = self._get_user_data(user_id)
+        user_data['data'] = data
+        return self.data.update({user_id: user_data})
+
+    async def update_data(self, user_id, data=None, **kwargs):
+        user_data = self._get_user_data(user_id)
+        if 'data' in user_data:
+            user_data['data'].update(kwargs)
+        else:
+            user_data['data'] = kwargs
+        return self.data.update({user_id: user_data})

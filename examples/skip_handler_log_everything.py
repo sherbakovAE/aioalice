@@ -3,7 +3,6 @@ from aiohttp import web
 from aioalice import Dispatcher, get_new_configured_app
 from aioalice.dispatcher import SkipHandler
 
-
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG)
 
@@ -12,7 +11,7 @@ WEBHOOK_URL_PATH = '/my-alice-webhook/'  # webhook endpoint
 WEBAPP_HOST = 'localhost'
 WEBAPP_PORT = 3001
 
-dp = Dispatcher()
+dp = Dispatcher(path=WEBHOOK_URL_PATH, name="skip_handlers_log")
 
 
 # Это обычный хэндлер. Через него мы будем пропускать
@@ -50,5 +49,5 @@ async def handle_all_requests(alice_request):
 
 
 if __name__ == '__main__':
-    app = get_new_configured_app(dispatcher=dp, path=WEBHOOK_URL_PATH)
+    app = get_new_configured_app(dispatchers=dp)
     web.run_app(app, host=WEBAPP_HOST, port=WEBAPP_PORT)

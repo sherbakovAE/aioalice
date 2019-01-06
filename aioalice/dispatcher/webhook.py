@@ -2,8 +2,8 @@ import asyncio
 import logging
 import functools
 from aiohttp import web
-import aiohttp_cors
-from aiohttp_cors import custom_cors, CorsViewMixin
+from aiohttp_cors import CorsViewMixin, ResourceOptions, setup as cors_setup
+from ..dispatcher import Dispatcher
 
 from ..utils import json, generate_json_payload
 from ..types import AliceRequest, AliceResponse, Response
@@ -24,7 +24,7 @@ DEFAULT_ERROR_RESPONSE_TEXT = 'Server error. Developer has to check logs.'
 RESPONSE_TIMEOUT = 1.2
 
 DEFAULT_CORS = {
-    "*": aiohttp_cors.ResourceOptions(
+    "*": ResourceOptions(
         allow_credentials=True,
         expose_headers="*",
         allow_headers="*",
@@ -51,11 +51,11 @@ class WebhookRequestHandler(web.View, CorsViewMixin):
 
     """
 
-    def get_dispatcher(self):
+    def get_dispatcher(self, name):
         """
         Get Dispatcher instance from environment
         """
-        return self.request.app[ALICE_DISPATCHER_KEY]
+        return self.request.app[name]
 
     async def parse_request(self):
         """
@@ -79,7 +79,7 @@ class WebhookRequestHandler(web.View, CorsViewMixin):
         :param request:
         :return:
         """
-        dispatcher = self.get_dispatcher()
+        dispatcher = self.get_dispatcher(self.request.match_info._route.name)
         loop = dispatcher.loop
 
         # Analog of `asyncio.wait_for` but without cancelling task
@@ -123,7 +123,7 @@ class WebhookRequestHandler(web.View, CorsViewMixin):
                         'request was automatically responded with `ERROR_RESPONSE_KEY`',
                         request, RESPONSE_TIMEOUT)
 
-            dispatcher = self.get_dispatcher()
+            dispatcher = self.get_dispatcher(self.request.match_info._route.name)
             loop = dispatcher.loop
 
             try:
@@ -181,7 +181,7 @@ class WebhookRequestHandler(web.View, CorsViewMixin):
         return web.json_response(response, dumps=json.dumps)
 
 
-def configure_app(app, dispatcher, path=DEFAULT_WEB_PATH,
+def configure_app(app, dispatchers,
                   default_response_or_text=DEFAULT_ERROR_RESPONSE_TEXT,
                   cors=None,
                   ):
@@ -189,7 +189,7 @@ def configure_app(app, dispatcher, path=DEFAULT_WEB_PATH,
     You can prepare web.Application for working with webhook handler.
 
     :param app: :class:`aiohttp.web.Application`
-    :param dispatcher: Dispatcher instance
+    :param dispatchers: list of Dispatcher instance
     :param path: Path to your webhook.
     :param default_response_or_text: `aioalice.types.Response` OR text to answer user on fail or timeout
     :param cors: CORS setting
@@ -199,15 +199,20 @@ def configure_app(app, dispatcher, path=DEFAULT_WEB_PATH,
     if cors is None:
         cors = DEFAULT_CORS
 
-    cors = aiohttp_cors.setup(app, defaults=cors)
-    app.on_shutdown.append(dispatcher.shutdown)
-    cors.add(app.router.add_route('*', path, WebhookRequestHandler, name='alice_webhook_handler'))
-    app[ALICE_DISPATCHER_KEY] = dispatcher
+    if isinstance(dispatchers, Dispatcher):
+        dispatchers = [dispatchers, ]
+
+    cors = cors_setup(app, defaults=cors)
+
+    for dispatcher in dispatchers:
+        app.on_shutdown.append(dispatcher.shutdown)
+        cors.add(app.router.add_route('*', dispatcher.path, WebhookRequestHandler, name=dispatcher.name))
+        app[dispatcher.name] = dispatcher
     # Prepare default Response
     if isinstance(default_response_or_text, Response):
         app[ERROR_RESPONSE_KEY] = default_response_or_text
     elif isinstance(default_response_or_text, str):
-        app[ERROR_RESPONSE_KEY] = Response(default_response_or_text)
+        app[ERROR_RESPONSE_KEY] = Response(text=default_response_or_text)
     else:
         response_text = str(default_response_or_text)
         app[ERROR_RESPONSE_KEY] = Response(response_text)
@@ -216,12 +221,12 @@ def configure_app(app, dispatcher, path=DEFAULT_WEB_PATH,
                     ' `aioalice.types.Response` next time', response_text)
 
 
-def get_new_configured_app(dispatcher, path=DEFAULT_WEB_PATH,
+def get_new_configured_app(dispatchers,
                            default_response_or_text=DEFAULT_ERROR_RESPONSE_TEXT, cors=None):
     """
     Create new :class:`aiohttp.web.Application` and configure it.
 
-    :param dispatcher: Dispatcher instance
+    :param dispatchers: list of Dispatcher instance
     :param path: Path to your webhook.
     :param default_response_or_text: `aioalice.types.Response` OR text to answer user on fail or timeout
     :param cors: CORS setting
@@ -231,5 +236,5 @@ def get_new_configured_app(dispatcher, path=DEFAULT_WEB_PATH,
     if cors is None:
         cors = DEFAULT_CORS
     app = web.Application()
-    configure_app(app, dispatcher, path, default_response_or_text, cors=cors)
+    configure_app(app, dispatchers, default_response_or_text, cors=cors)
     return app

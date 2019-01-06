@@ -16,27 +16,10 @@
 - Работа с состояниями
 - Легко загрузить изображение, сформировать ответ
 
+## Это форк. Изменения
+- Возможность запуска нескольких навыков на одном aiohttp сервере
+- Экспериметальная поддержка unQLite в качестве хранилища
 
-### Установка
-
-```bash
-# рекомендуется использовать virtual env и python 3.6+:
-python3.6 -m venv aliceenv
-source ./aliceenv/bin/activate
-
-pip install pip -U
-pip install setuptools -U
-pip install uvloop  # uvloop при желании
-
-pip install aioalice -U
-# Or install from GitHub:
-# pip install git+https://github.com/surik00/aioalice.git -U
-
-# Если git не установлен:
-# 1. скачайте ZIP
-# 2. разархивируйте и перейдите в папку
-# 3. выполните следующую команду:
-python setup.py install
 ```
 
 

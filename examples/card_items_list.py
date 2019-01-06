@@ -7,7 +7,7 @@ WEBHOOK_URL_PATH = '/my-alice-webhook/'  # webhook endpoint
 WEBAPP_HOST = 'localhost'
 WEBAPP_PORT = 3001
 
-dp = Dispatcher()
+dp = Dispatcher(path=WEBHOOK_URL_PATH, name="card_items_list")
 
 
 # Если кнопка не передана, клик по изображению не даст ничего
@@ -63,5 +63,5 @@ async def handle_all_requests(alice_request):
 
 
 if __name__ == '__main__':
-    app = get_new_configured_app(dispatcher=dp, path=WEBHOOK_URL_PATH)
+    app = get_new_configured_app(dispatcher=dp)
     web.run_app(app, host=WEBAPP_HOST, port=WEBAPP_PORT)

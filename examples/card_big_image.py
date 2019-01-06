@@ -7,7 +7,7 @@ WEBHOOK_URL_PATH = '/my-alice-webhook/'  # webhook endpoint
 WEBAPP_HOST = 'localhost'
 WEBAPP_PORT = 3001
 
-dp = Dispatcher()
+dp = Dispatcher(path=WEBHOOK_URL_PATH, name="card_big_image")
 
 
 # если в commands передать строку, то она автоматически
@@ -20,6 +20,7 @@ async def handle_no_button_request(alice_request):
         'Заголовок изображения',
         'Это описание изображения'
     )
+
 
 # Если кнопка не передана, клик по изображению не даст ничего
 # Если кнопка передана, в ней должен быть указан URL, который
@@ -40,5 +41,5 @@ async def handle_all_requests(alice_request):
 
 
 if __name__ == '__main__':
-    app = get_new_configured_app(dispatcher=dp, path=WEBHOOK_URL_PATH)
+    app = get_new_configured_app(dispatchers=dp)
     web.run_app(app, host=WEBAPP_HOST, port=WEBAPP_PORT)

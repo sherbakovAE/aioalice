@@ -15,7 +15,7 @@ class Session(BaseSession):
     """Session object"""
     new = attrib(type=bool)
     # for test with https://github.com/popstas/yandex-dialogs-client
-    skill_id = attrib(type=str, init=False)
+    skill_id = attrib(type=str, default="")
 
     @property
     def base(self):

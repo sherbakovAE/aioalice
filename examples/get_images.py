@@ -6,7 +6,6 @@ from aioalice import Dispatcher
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.INFO)
 
-
 # Provide your own skill_id and token!
 SKILL_ID = '12a34567-c42d-9876-0e3f-123g55h12345'
 OAUTH_TOKEN = 'OAuth AQAAAAABCDEFGHI_jklmnopqrstuvwxyz'

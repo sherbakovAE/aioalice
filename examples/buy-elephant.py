@@ -2,21 +2,18 @@ import logging
 
 from aiohttp import web
 from aioalice import Dispatcher, get_new_configured_app, types
-from aioalice.dispatcher import MemoryStorage
-
+from aioalice.dispatcher import MemoryStorage, UnQliteStorage
 
 WEBHOOK_URL_PATH = '/my-alice-webhook/'  # webhook endpoint
 
-WEBAPP_HOST = 'localhost'
+WEBAPP_HOST = '0.0.0.0'
 WEBAPP_PORT = 3001
-
 
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.INFO)
 
 # Создаем экземпляр диспетчера и подключаем хранилище в памяти
-dp = Dispatcher(storage=MemoryStorage())
-
+dp = Dispatcher(storage=UnQliteStorage(), path=WEBHOOK_URL_PATH, name="buy_elefant")
 
 ele_link = 'https://market.yandex.ru/search?text=слон'
 # Заготавливаем кнопку на всякий случай
@@ -85,5 +82,5 @@ async def handle_all_other_requests(alice_request):
 
 
 if __name__ == '__main__':
-    app = get_new_configured_app(dispatcher=dp, path=WEBHOOK_URL_PATH)
+    app = get_new_configured_app(dispatchers=dp)
     web.run_app(app, host=WEBAPP_HOST, port=WEBAPP_PORT)

@@ -3,7 +3,7 @@ import unittest
 from aioalice import types
 from aioalice.utils import generate_json_payload
 
-from _dataset import META, MARKUP, SESSION, \
+from ._dataset import META, MARKUP, SESSION, \
     REQUEST, REQUEST_DANGEROUS, BASE_SESSION, \
     RESPONSE, RESPONSE2, ALICE_REQUEST, \
     ALICE_RESPONSE, ALICE_RESPONSE_WITH_BUTTONS, \
@@ -60,24 +60,24 @@ class TestAliceTypes(unittest.TestCase):
 
     def _test_entity_value(self, ev, dct):
         for key in (
-            'first_name',
-            'patronymic_name',
-            'last_name',
-            'country',
-            'city',
-            'street',
-            'house_number',
-            'airport',
-            'year',
-            'year_is_relative',
-            'month',
-            'month_is_relative',
-            'day',
-            'day_is_relative',
-            'hour',
-            'hour_is_relative',
-            'minute',
-            'minute_is_relative',
+                'first_name',
+                'patronymic_name',
+                'last_name',
+                'country',
+                'city',
+                'street',
+                'house_number',
+                'airport',
+                'year',
+                'year_is_relative',
+                'month',
+                'month_is_relative',
+                'day',
+                'day_is_relative',
+                'hour',
+                'hour_is_relative',
+                'minute',
+                'minute_is_relative',
         ):
             if key in dct:
                 self.assertEqual(getattr(ev, key), dct[key])
