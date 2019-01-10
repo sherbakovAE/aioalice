@@ -209,7 +209,7 @@ class UnQliteStorage(BaseStorage):
     def repair_from_store(d: Union[dict, bytes]) -> dict:
         if isinstance(d, bytes):
             try:
-                return json.loads(d.decode().replace("'", "\""))
+                return json.loads(d.decode().replace("'", "\"").replace("None", "null"))
             except json.decoder.JSONDecodeError as e:
                 log.error(e)
 
