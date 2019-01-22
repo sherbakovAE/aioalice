@@ -4,7 +4,7 @@ import asyncio
 
 from . import api
 from .handler import Handler, SkipHandler
-from .storage import DisabledStorage, MemoryStorage, UnQliteStorage, DEFAULT_STATE
+from .storage import DisabledStorage, MemoryStorage, SqliteStorage, DEFAULT_STATE
 from .filters import generate_default_filters, ExceptionsFilter
 from ..utils import json, exceptions
 

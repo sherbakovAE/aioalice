@@ -1,22 +1,31 @@
-from aioalice.dispatcher import UnQliteStorage
-from unqlite import UnQLite
+from aioalice.dispatcher import SqliteStorage
 import unittest
+import aiounittest
+from datetime import datetime
 
-db = UnQLite()
+sd = SqliteStorage()
 
-ID = "faes3245kj345hk"
-TEST_DATA = {"state": "DEFAULT", "data": {"hand": 1}}
+USER_ID = "faes3245kj345hk"
+TEST_DATA = {"state": "DEFAULT", "data": {"hand": 1, "check": False, "start": datetime.now()}}
 
 
-class TestUnQliteStorage(unittest.TestCase):
-    def test_store(self):
-        db[ID] = TEST_DATA
-        self.assertEqual(UnQliteStorage.repair_from_store(db[ID]), TEST_DATA)
+class TestSqliteDictStorage(aiounittest.AsyncTestCase):
+    async def test_store(self):
+        sd.data[USER_ID] = TEST_DATA
+        self.assertEqual(sd.data[USER_ID], TEST_DATA)
 
-    def test_search(self):
-        self.assertEqual(db.exists(ID), False)
-        db[ID] = TEST_DATA
-        self.assertEqual(db.exists(ID), True)
+    async def test_delete(self):
+        sd.data[USER_ID] = TEST_DATA
+        await sd.delete(USER_ID)
+        self.assertEqual(USER_ID in sd.data, False)
+
+    async def test_state(self):
+        await sd.set_state(USER_ID, TEST_DATA['state'])
+        self.assertEqual(await sd.get_state(USER_ID), TEST_DATA['state'])
+
+    async def test_data(self):
+        await sd.set_data(USER_ID, TEST_DATA['data'])
+        self.assertEqual(await sd.get_data(USER_ID), TEST_DATA['data'])
 
 
 if __name__ == '__main__':
